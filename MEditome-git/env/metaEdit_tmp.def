@@ -1,0 +1,64 @@
+Bootstrap: docker
+From: centos:7
+
+%post
+
+    # Update the system
+    yum update -y
+
+    # Install basic utilities and development tools
+    yum groupinstall -y "Development Tools"
+    yum install -y epel-release curl wget java-1.8.0-openjdk zlib-devel bzip2 bzip2-devel readline-devel sqlite sqlite-devel openssl-devel xz xz-devel libffi-devel
+
+    # Download and install Python 3.7 from source
+    cd /tmp
+    wget https://www.python.org/ftp/python/3.7.12/Python-3.7.12.tgz
+    tar xvf Python-3.7.12.tgz
+    cd Python-3.7.12
+    ./configure --enable-optimizations
+    make altinstall
+
+    # Verify if Python 3.7 is installed
+    python3.7 --version
+
+    # Link pip3.7 to pip3 for convenience
+    ln -s /usr/local/bin/pip3.7 /usr/local/bin/pip3
+
+    # Upgrade pip for Python 3.7
+    pip3 install --upgrade pip
+
+    # Step 1: Python Dependencies
+    # Install an older version of Biopython (assuming 1.76 for this example) to avoid the Bio.Alphabet issue
+    pip3.7 install biopython==1.76 pandas gffutils
+
+
+    # Step 2: Trim_galore Installation
+    pip3.7 install --upgrade cutadapt
+
+    # Installing fastqc
+    wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip
+    unzip fastqc_v0.11.9.zip -d /opt/
+    chmod +x /opt/FastQC/fastqc
+    ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc
+
+    curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.4.5.tar.gz -o /trim_galore.tar.gz
+
+    cd / && tar xvzf trim_galore.tar.gz
+    rm /trim_galore.tar.gz
+
+    # Step 3: Other Dependencies
+    yum install -y bwa samtools
+
+    # Step 4: Install aimap
+    pip3.7 install aimap
+
+%environment
+    export PATH=$PATH:/TrimGalore-0.4.5/
+
+%runscript
+    echo "Container metaEdit started. Use your desired tools!"
+
+%test
+    cutadapt --version
+    fastqc -v
+    Adenosine_to_inosine.py -h

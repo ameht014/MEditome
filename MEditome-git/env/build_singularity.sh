@@ -1,0 +1,1 @@
+sudo /bin/singularity build --sandbox metaEdit.sif metaEdit.def
